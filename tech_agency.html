@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZITE.III | Avant-Garde Studio</title>
+    
+    <!-- High-end typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           CSS VARIABLES & RESET
+           ========================================= */
+        :root {
+            --bg-color: #050507;
+            --text-main: #f0f0f0;
+            --text-muted: #888890;
+            --accent-1: #ff2a5f; /* Neon Pink */
+            --accent-2: #00f0ff; /* Neon Cyan */
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+            --cursor-size: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* Disable default cursor everywhere */
+            cursor: none !important; 
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           CUSTOM CURSOR
+           ========================================= */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-dot {
+            width: var(--cursor-size);
+            height: var(--cursor-size);
+            background-color: var(--accent-2);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(0, 240, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        /* Cursor states */
+        body.hovering .cursor-dot {
+            width: 0;
+            height: 0;
+        }
+        body.hovering .cursor-outline {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 42, 95, 0.1);
+            border-color: var(--accent-1);
+            mix-blend-mode: exclusion;
+        }
+
+        /* =========================================
+           BACKGROUND CANVAS
+           ========================================= */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* =========================================
+           TYPOGRAPHY & UTILITIES
+           ========================================= */
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 5vw;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .reveal.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* =========================================
+           MAGNETIC BUTTON
+           ========================================= */
+        .magnetic-wrap {
+            display: inline-block;
+            padding: 2rem;
+            margin: -2rem; /* Negate padding for layout */
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem 3rem;
+            background: transparent;
+            color: var(--text-main);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 100px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s, color 0.3s;
+            text-decoration: none;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-2);
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            z-index: -1;
+            border-radius: 50% 50% 0 0;
+        }
+
+        .btn:hover {
+            color: var(--bg-color);
+            border-color: var(--accent-2);
+        }
+
+        .btn:hover::before {
+            transform: translateY(-100%);
+            border-radius: 0;
+        }
+
+        /* =========================================
+           HEADER & NAV
+           ========================================= */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 2rem 0;
+            z-index: 100;
+            mix-blend-mode: difference;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            position: relative;
+        }
+
+        .logo span {
+            color: var(--accent-1);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent-2);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* =========================================
+           HERO SECTION (GLITCH)
+           ========================================= */
+        #hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .glitch-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .glitch {
+            font-size: clamp(4rem, 10vw, 8rem);
+            color: var(--text-main);
+            position: relative;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--accent-1);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim 3s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--accent-2);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(10px, 9999px, 44px, 0); }
+            20% { clip: rect(62px, 9999px, 12px, 0); }
+            40% { clip: rect(81px, 9999px, 78px, 0); }
+            60% { clip: rect(23px, 9999px, 92px, 0); }
+            80% { clip: rect(4px, 9999px, 33px, 0); }
+            100% { clip: rect(50px, 9999px, 18px, 0); }
+        }
+
+        .hero-desc {
+            font-size: 1.2rem;
+            max-width: 500px;
+            color: var(--text-muted);
+            margin-bottom: 4rem;
+        }
+
+        /* =========================================
+           ABOUT (ASYMMETRIC GRID)
+           ========================================= */
+        #about {
+            padding: 10rem 0;
+        }
+
+        .asymmetric-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .about-title {
+            grid-column: 1 / 6;
+            font-size: clamp(2rem, 5vw, 4rem);
+        }
+
+        .about-title span {
+            color: transparent;
+            -webkit-text-stroke: 1px var(--accent-1);
+        }
+
+        .about-text {
+            grid-column: 7 / 12;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .about-text p {
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            grid-column: 3 / 6;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 2rem;
+        }
+
+        .stat-number {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            color: var(--accent-2);
+            line-height: 1;
+        }
+
+        /* =========================================
+           SERVICES (3D TILT CARDS)
+           ========================================= */
+        #services {
+            padding: 10rem 0;
+            background: linear-gradient(to bottom, transparent, rgba(0, 240, 255, 0.03), transparent);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 8rem;
+        }
+
+        .section-header h2 {
+            font-size: 3rem;
+            text-transform: uppercase;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            perspective: 1000px; /* Required for 3D effect */
+        }
+
+        .tilt-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4rem 3rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .tilt-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        .tilt-card:hover::after {
+            opacity: 1;
+        }
+
+        .card-content {
+            transform: translateZ(50px); /* Pushes content forward */
+        }
+
+        .card-num {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: transparent;
+            -webkit-text-stroke: 1px var(--text-muted);
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        .tilt-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--accent-2);
+        }
+
+        .tilt-card p {
+            color: var(--text-muted);
+        }
+
+        /* =========================================
+           CONTACT & FOOTER
+           ========================================= */
+        #contact {
+            padding: 15rem 0 5rem;
+            text-align: center;
+        }
+
+        .big-link {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 8rem);
+            color: transparent;
+            -webkit-text-stroke: 2px var(--text-main);
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: all 0.5s ease;
+            display: inline-block;
+        }
+
+        .big-link:hover {
+            color: var(--accent-1);
+            -webkit-text-stroke: 0px;
+            transform: scale(1.05);
+        }
+
+        footer {
+            margin-top: 10rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">ZITE<span>.III</span></div>
+                <ul class="nav-links">
+                    <li><a href="#hero" class="hover-target">Init</a></li>
+                    <li><a href="#about" class="hover-target">Core</a></li>
+                    <li><a href="#services" class="hover-target">Systems</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="glitch-wrapper reveal in-view">
+                        <h1 class="glitch" data-text="Creative">Creative</h1><br>
+                        <h1 class="glitch" data-text="Technology.">Technology.</h1>
+                    </div>
+                    <p class="hero-desc reveal in-view" style="transition-delay: 0.2s;">
+                        We engineer digital experiences that defy convention. Transcending boundaries through code, motion, and avant-garde design.
+                    </p>
+                    <div class="reveal in-view" style="transition-delay: 0.4s;">
+                        <div class="magnetic-wrap">
+                            <a href="#contact" class="btn hover-target magnetic-element">Initiate Sequence</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="container asymmetric-grid">
+                <h2 class="about-title reveal">
+                    Redefining <br><span>Digital</span> <br>Boundaries
+                </h2>
+                <div class="about-text reveal" style="transition-delay: 0.2s;">
+                    <p>We are a specialized collective of developers and designers operating at the intersection of aesthetics and complex logic.</p>
+                    <p>Standard templates limit potential. We build custom infrastructures and bespoke visual languages for brands that refuse to blend in.</p>
+                </div>
+                <div class="stat-box reveal">
+                    <div class="stat-number">01</div>
+                    <p class="text-muted">Phase Operation</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2>Core Systems</h2>
+                </div>
+                <div class="services-grid">
+                    
+                    <div class="tilt-card reveal hover-target">
+                        <div class="card-content">
+                            <span class="card-num">01</span>
+                            <h3>WebGL & 3D</h3>
+                            <p>Immersive browser experiences pushing the limits of the GPU. From interactive product showcases to abstract data visualizations.</p>
+                        </div>
+                    </div>
+
+                    <div class="tilt-card reveal hover-target" style="transition-delay: 0.2s;">
+                        <div class="card-content">
+                            <span class="card-num">02</span>
+                            <h3>Creative Coding</h3>
+                            <p>Algorithmic design and procedural generation. We write scripts that draw, animate, and react to user input in real-time.</p>
+                        </div>
+                    </div>
+
+                    <div class="tilt-card reveal hover-target" style="transition-delay: 0.4s;">
+                        <div class="card-content">
+                            <span class="card-num">03</span>
+                            <h3>Headless Arch</h3>
+                            <p>Decoupled frontends backed by robust microservices. Delivering unparalleled speed and unconstrained UI possibilities.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact">
+            <div class="container reveal">
+                <p style="color: var(--accent-1); margin-bottom: 2rem; font-family: var(--font-display); letter-spacing: 3px;">ESTABLISH CONNECTION</p>
+                <a href="mailto:hello@zite.iii" class="big-link hover-target">HELLO@ZITE.III</a>
+            </div>
+            
+            <div class="container">
+                <footer class="reveal">
+                    <div>&copy; 2026 ZITE.III STUDIO</div>
+                    <div>ENCRYPTED PROTOCOL</div>
+                </footer>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================
+           1. CUSTOM CURSOR & HOVER LOGIC
+           ========================================= */
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorOutline = document.getElementById('cursor-outline');
+        const hoverTargets = document.querySelectorAll('.hover-target');
+        
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let outlineX = mouseX;
+        let outlineY = mouseY;
+
+        // Track mouse position
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            // Dot follows instantly
+            cursorDot.style.left = `${mouseX}px`;
+            cursorDot.style.top = `${mouseY}px`;
+        });
+
+        // Smooth follower for outline
+        function animateCursor() {
+            let distX = mouseX - outlineX;
+            let distY = mouseY - outlineY;
+            
+            // Easing
+            outlineX += distX * 0.15;
+            outlineY += distY * 0.15;
+            
+            cursorOutline.style.left = `${outlineX}px`;
+            cursorOutline.style.top = `${outlineY}px`;
+            
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Hover states
+        hoverTargets.forEach(target => {
+            target.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            target.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+
+        /* =========================================
+           2. MAGNETIC ELEMENTS
+           ========================================= */
+        const magnets = document.querySelectorAll('.magnetic-element');
+
+        magnets.forEach(magnet => {
+            magnet.addEventListener('mousemove', (e) => {
+                const rect = magnet.getBoundingClientRect();
+                const h = rect.width / 2;
+                const v = rect.height / 2;
+                
+                // Calculate distance from center of element
+                const x = e.clientX - rect.left - h;
+                const y = e.clientY - rect.top - v;
+                
+                // Move element towards mouse
+                magnet.style.transform = `translate(${x * 0.3}px, ${y * 0.4}px)`;
+            });
+
+            magnet.addEventListener('mouseleave', () => {
+                // Reset position
+                magnet.style.transform = `translate(0px, 0px)`;
+                magnet.style.transition = 'transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)';
+            });
+            
+            magnet.addEventListener('mouseenter', () => {
+                magnet.style.transition = 'none'; // Remove transition for smooth tracking
+            });
+        });
+
+        /* =========================================
+           3. 3D TILT EFFECT FOR CARDS
+           ========================================= */
+        const cards = document.querySelectorAll('.tilt-card');
+
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left; // x position within the element.
+                const y = e.clientY - rect.top;  // y position within the element.
+                
+                // Calculate rotation (max 15 degrees)
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -15;
+                const rotateY = ((x - centerX) / centerX) * 15;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                
+                // Update CSS variables for radial gradient glow
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+            });
+        });
+
+        /* =========================================
+           4. SCROLL REVEAL (INTERSECTION OBSERVER)
+           ========================================= */
+        const revealElements = document.querySelectorAll('.reveal');
+
+        const revealOptions = {
+            threshold: 0.15,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('in-view');
+                observer.unobserve(entry.target); // Reveal only once
+            });
+        }, revealOptions);
+
+        revealElements.forEach(el => {
+            // Check if already in view on load
+            revealOnScroll.observe(el);
+        });
+
+        /* =========================================
+           5. CANVAS PARTICLE NETWORK
+           ========================================= */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 1.5 + 0.5;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off edges
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                // Mouse interaction (avoid mouse)
+                let dx = mouseX - this.x;
+                let dy = mouseY - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 150) {
+                    this.x -= dx * 0.01;
+                    this.y -= dy * 0.01;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles based on screen size
+        function initParticles() {
+            particles = [];
+            let numParticles = (width * height) / 15000; // Density
+            if(numParticles > 100) numParticles = 100; // Cap for performance
+            
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw lines between close particles
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                for (let j = i; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 - distance/800})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // Re-init particles on screen resize to maintain density
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(initParticles, 200);
+        });
+
+    </script>
+</body>
+</html>
